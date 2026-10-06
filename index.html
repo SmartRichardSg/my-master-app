@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f6f8">
+<title>My Master App</title>
+<style>
+  :root {
+    --bg:#f4f6f8; --card:#fff; --text:#17202a; --muted:#68737d;
+    --accent:#2f6fed; --danger:#c0392b; --border:#dfe4e8;
+    --shadow:0 3px 12px rgba(0,0,0,.08);
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    font-size:18px; line-height:1.4;
+  }
+  button,input { font:inherit; }
+  .wrap { max-width:760px; margin:auto; padding:18px 16px 40px; }
+  header { text-align:center; padding:10px 0 18px; }
+  h1 { margin:0; font-size:30px; }
+  .subtitle { color:var(--muted); margin-top:5px; }
+  section { margin:18px 0 24px; }
+  .section-title {
+    font-size:23px; font-weight:800; margin:0 0 10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .app-list { display:grid; gap:10px; }
+  .app-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:15px; box-shadow:var(--shadow); padding:13px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .icon {
+    width:48px; height:48px; border-radius:12px; background:#eef3ff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:27px; flex:0 0 48px;
+  }
+  .app-info { min-width:0; flex:1; }
+  .app-name { font-weight:750; font-size:19px; overflow-wrap:anywhere; }
+  .app-desc { color:var(--muted); font-size:14px; overflow-wrap:anywhere; }
+  .actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+  .btn {
+    border:0; border-radius:10px; padding:9px 12px; cursor:pointer;
+    background:#edf1f5; color:var(--text); min-height:42px;
+  }
+  .btn.primary { background:var(--accent); color:white; font-weight:700; }
+  .btn.danger { background:#fff0ee; color:var(--danger); }
+  .btn.small { padding:7px 9px; min-height:38px; font-size:15px; }
+  .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 18px; }
+  .empty {
+    background:#fff; border:1px dashed #cbd3da; border-radius:14px;
+    padding:18px; text-align:center; color:var(--muted);
+  }
+  .panel {
+    background:#fff; border:1px solid var(--border); border-radius:15px;
+    padding:16px; margin:14px 0; box-shadow:var(--shadow);
+  }
+  label { display:block; font-weight:700; margin:10px 0 5px; }
+  input[type="text"], input[type="url"], input[type="password"] {
+    width:100%; padding:12px; border:1px solid #cbd3da; border-radius:10px;
+    background:#fff; color:var(--text);
+  }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .footer { text-align:center; color:var(--muted); font-size:13px; margin-top:30px; }
+  .hidden { display:none !important; }
+  .login {
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .login-card {
+    width:min(430px,100%); background:#fff; border-radius:20px;
+    padding:26px; box-shadow:var(--shadow); border:1px solid var(--border);
+    text-align:center;
+  }
+  .lock { font-size:48px; }
+  .error { color:var(--danger); min-height:25px; margin:8px 0; }
+  .settings-line { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid #edf0f2; }
+  .settings-line:last-child { border-bottom:0; }
+  .switch { transform:scale(1.25); }
+  @media (max-width:600px) {
+    .app-card { align-items:flex-start; }
+    .actions { flex-direction:column; }
+    .actions .btn { width:100%; }
+    .row { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!--
+  MASTER APP SETTINGS
+  Change these two values if required.
+  PASSWORD_PROTECTION = true  -> password required
+  PASSWORD_PROTECTION = false -> opens without password
+  PASSWORD = "1956"            -> your current password
+
+  IMPORTANT:
+  This is a convenience/privacy lock, not high-security encryption.
+  If you forget the password, open this file on GitHub and look here.
+-->
+<script>
+const PASSWORD_PROTECTION = true;
+const PASSWORD = "1956";
+const APP_TITLE = "My Master App";
+</script>
+
+<div id="loginScreen" class="login">
+  <div class="login-card">
+    <div class="lock">🔐</div>
+    <h1>My Master App</h1>
+    <p>Enter your password to continue.</p>
+    <input id="loginPassword" type="password" inputmode="numeric" autocomplete="current-password"
+           placeholder="Password" aria-label="Password">
+    <div id="loginError" class="error"></div>
+    <button class="btn primary" style="width:100%" onclick="login()">Unlock</button>
+    <button class="btn" style="width:100%;margin-top:8px" onclick="showPasswordHelp()">Forgot password?</button>
+  </div>
+</div>
+
+<noscript><div style="padding:20px;text-align:center;font-family:Arial">JavaScript is required for the Master App. Please open it in Safari or GitHub Pages.</div></noscript>
+
+<div id="appScreen" class="wrap hidden">
+  <header>
+    <h1>📱 My Master App</h1>
+    <div class="subtitle">All my apps in one place</div>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn primary" onclick="openEditor()">＋ Add App</button>
+    <button class="btn" onclick="toggleSearch()">🔍 Search</button>
+    <button class="btn" onclick="openSettings()">⚙️ Settings</button>
+    <button class="btn" onclick="lockApp()">🔒 Lock</button>
+  </div>
+
+  <div id="searchPanel" class="panel hidden">
+    <label for="searchInput">Search apps</label>
+    <input id="searchInput" type="text" placeholder="Type an app name..." oninput="renderApps()">
+  </div>
+
+  <div id="editor" class="panel hidden">
+    <h2 id="editorTitle" style="margin-top:0">Add App</h2>
+    <input type="hidden" id="editId">
+    <label for="appName">App name</label>
+    <input id="appName" type="text" maxlength="60" placeholder="e.g. Breathing Coach">
+    <label for="appUrl">App link</label>
+    <input id="appUrl" type="url" placeholder="https://...">
+    <div class="row">
+      <div>
+        <label for="appIcon">Icon</label>
+        <input id="appIcon" type="text" maxlength="4" placeholder="🧘">
+      </div>
+      <div>
+        <label for="appSection">Section</label>
+        <select id="appSection" style="width:100%;padding:12px;border:1px solid #cbd3da;border-radius:10px;background:#fff;font:inherit">
+          <option value="morning">☀️ Morning</option>
+          <option value="afternoon">🌤 Afternoon</option>
+          <option value="evening">🌙 Evening</option>
+        </select>
+      </div>
+    </div>
+    <label for="appDesc">Short description (optional)</label>
+    <input id="appDesc" type="text" maxlength="100" placeholder="What this app is for">
+    <div class="toolbar" style="margin-bottom:0;margin-top:14px">
+      <button class="btn primary" onclick="saveApp()">Save App</button>
+      <button class="btn" onclick="closeEditor()">Cancel</button>
+    </div>
+  </div>
+
+  <div id="settingsPanel" class="panel hidden">
+    <h2 style="margin-top:0">Settings</h2>
+    <div class="settings-line">
+      <span><strong>Password protection</strong><br><small>Uses the setting at the top of index.html.</small></span>
+      <input class="switch" type="checkbox" id="protectionToggle" onchange="showProtectionInfo()">
+    </div>
+    <div class="settings-line">
+      <span><strong>Current app count</strong></span><span id="appCount">0</span>
+    </div>
+    <div class="toolbar" style="margin-bottom:0">
+      <button class="btn" onclick="exportApps()">⬇️ Backup app list</button>
+      <button class="btn danger" onclick="resetApps()">Reset app list</button>
+    </div>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:0">
+      To change the password, edit PASSWORD near the top of this index.html on GitHub.
+    </p>
+  </div>
+
+  <main id="sections"></main>
+  <div class="footer">Single-file GitHub Master App • Your app list is stored on this device.</div>
+</div>
+
+<script>
+const STORAGE_KEY = "masterAppListV1";
+const sections = {
+  morning: {title:"☀️ Morning", name:"Morning"},
+  afternoon: {title:"🌤 Afternoon", name:"Afternoon"},
+  evening: {title:"🌙 Evening", name:"Evening"}
+};
+
+function makeId() {
+  return "app-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+}
+const defaultApps = [
+  {id:makeId(), name:"Breathing Coach", url:"", icon:"🧘", desc:"Daily breathing exercises", section:"morning"},
+  {id:makeId(), name:"Daily Writing Coach", url:"", icon:"✍️", desc:"Daily writing practice", section:"morning"},
+  {id:makeId(), name:"Observation Coach", url:"", icon:"👀", desc:"Observation practice", section:"afternoon"},
+  {id:makeId(), name:"Decision Making Coach", url:"", icon:"🧠", desc:"Decision practice", section:"afternoon"},
+  {id:makeId(), name:"Sudoku", url:"", icon:"🧩", desc:"Relaxing evening puzzle", section:"evening"}
+];
+
+let apps = loadApps();
+let authenticated = !PASSWORD_PROTECTION;
+
+function loadApps() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch(e) {}
+  return defaultApps;
+}
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
+}
+function init() {
+  document.title = APP_TITLE;
+  if (PASSWORD_PROTECTION) {
+    document.getElementById("loginScreen").classList.remove("hidden");
+  } else {
+    showApp();
+  }
+  document.getElementById("loginPassword").addEventListener("keydown", e => {
+    if (e.key === "Enter") login();
+  });
+}
+function login() {
+  const value = document.getElementById("loginPassword").value;
+  if (value === PASSWORD) {
+    authenticated = true;
+    document.getElementById("loginError").textContent = "";
+    showApp();
+  } else {
+    document.getElementById("loginError").textContent = "Incorrect password. Please try again.";
+  }
+}
+function showApp() {
+  document.getElementById("loginScreen").classList.add("hidden");
+  document.getElementById("appScreen").classList.remove("hidden");
+  renderApps();
+}
+function lockApp() {
+  authenticated = false;
+  document.getElementById("appScreen").classList.add("hidden");
+  document.getElementById("loginScreen").classList.remove("hidden");
+  document.getElementById("loginPassword").value = "";
+}
+function showPasswordHelp() {
+  alert("If you forget the password, open index.html on GitHub and look near the top for: PASSWORD = \"...\"");
+}
+function toggleSearch() {
+  document.getElementById("searchPanel").classList.toggle("hidden");
+  if (!document.getElementById("searchPanel").classList.contains("hidden"))
+    document.getElementById("searchInput").focus();
+}
+function openEditor(id="") {
+  document.getElementById("editor").classList.remove("hidden");
+  document.getElementById("settingsPanel").classList.add("hidden");
+  document.getElementById("editId").value = id;
+  if (id) {
+    const a = apps.find(x=>x.id===id);
+    if (!a) return;
+    document.getElementById("editorTitle").textContent = "Edit App";
+    document.getElementById("appName").value = a.name;
+    document.getElementById("appUrl").value = a.url;
+    document.getElementById("appIcon").value = a.icon;
+    document.getElementById("appDesc").value = a.desc || "";
+    document.getElementById("appSection").value = a.section;
+  } else {
+    document.getElementById("editorTitle").textContent = "Add App";
+    document.getElementById("appName").value = "";
+    document.getElementById("appUrl").value = "";
+    document.getElementById("appIcon").value = "📱";
+    document.getElementById("appDesc").value = "";
+    document.getElementById("appSection").value = "morning";
+  }
+  document.getElementById("appName").focus();
+}
+function closeEditor() { document.getElementById("editor").classList.add("hidden"); }
+function saveApp() {
+  const name = document.getElementById("appName").value.trim();
+  const url = document.getElementById("appUrl").value.trim();
+  const icon = document.getElementById("appIcon").value.trim() || "📱";
+  const desc = document.getElementById("appDesc").value.trim();
+  const section = document.getElementById("appSection").value;
+  if (!name) return alert("Please enter an app name.");
+  if (!url) return alert("Please enter the app link.");
+  try { new URL(url); } catch(e) { return alert("Please enter a valid link starting with https://"); }
+  const id = document.getElementById("editId").value;
+  if (id) {
+    const i = apps.findIndex(x=>x.id===id);
+    if (i >= 0) apps[i] = {...apps[i], name,url,icon,desc,section};
+  } else {
+    apps.push({id:makeId(),name,url,icon,desc,section});
+  }
+  persist(); closeEditor(); renderApps();
+}
+function deleteApp(id) {
+  const a = apps.find(x=>x.id===id);
+  if (!a) return;
+  if (confirm('Delete "' + a.name + '" from the Master App?')) {
+    apps = apps.filter(x=>x.id!==id); persist(); renderApps();
+  }
+}
+function moveApp(id, direction) {
+  const a = apps.find(x=>x.id===id);
+  if (!a) return;
+  const same = apps.filter(x=>x.section===a.section);
+  const idx = same.findIndex(x=>x.id===id);
+  const target = idx + direction;
+  if (target < 0 || target >= same.length) return;
+  const otherId = same[target].id;
+  const i = apps.findIndex(x=>x.id===id), j = apps.findIndex(x=>x.id===otherId);
+  [apps[i],apps[j]] = [apps[j],apps[i]];
+  persist(); renderApps();
+}
+function openApp(url) {
+  if (!url) return alert("This app does not have a link yet. Tap Edit to add it.");
+  window.location.href = url;
+}
+function renderApps() {
+  const root = document.getElementById("sections");
+  const q = (document.getElementById("searchInput")?.value || "").toLowerCase().trim();
+  root.innerHTML = "";
+  let shown = 0;
+  Object.keys(sections).forEach(key => {
+    const list = apps.filter(a => a.section===key && (!q || (a.name+" "+(a.desc||"")).toLowerCase().includes(q)));
+    const sec = document.createElement("section");
+    sec.innerHTML = '<h2 class="section-title">'+sections[key].title+'</h2>';
+    const box = document.createElement("div");
+    box.className = "app-list";
+    if (!list.length) {
+      const e=document.createElement("div"); e.className="empty";
+      e.textContent=q ? "No matching apps in this section." : "No apps added yet.";
+      box.appendChild(e);
+    } else {
+      list.forEach((a, index) => {
+        shown++;
+        const card=document.createElement("div"); card.className="app-card";
+        const icon=document.createElement("div"); icon.className="icon"; icon.textContent=a.icon;
+        const info=document.createElement("div"); info.className="app-info";
+        const nm=document.createElement("div"); nm.className="app-name"; nm.textContent=a.name;
+        const ds=document.createElement("div"); ds.className="app-desc"; ds.textContent=a.desc || "";
+        info.append(nm,ds);
+        const actions=document.createElement("div"); actions.className="actions";
+        const open=document.createElement("button"); open.className="btn primary"; open.textContent="Open"; open.onclick=()=>openApp(a.url);
+        const edit=document.createElement("button"); edit.className="btn small"; edit.textContent="Edit"; edit.onclick=()=>openEditor(a.id);
+        const up=document.createElement("button"); up.className="btn small"; up.textContent="↑"; up.title="Move up"; up.onclick=()=>moveApp(a.id,-1);
+        const down=document.createElement("button"); down.className="btn small"; down.textContent="↓"; down.title="Move down"; down.onclick=()=>moveApp(a.id,1);
+        const del=document.createElement("button"); del.className="btn small danger"; del.textContent="Delete"; del.onclick=()=>deleteApp(a.id);
+        actions.append(open,edit,up,down,del);
+        card.append(icon,info,actions); box.appendChild(card);
+      });
+    }
+    sec.appendChild(box); root.appendChild(sec);
+  });
+  document.getElementById("appCount").textContent = apps.length;
+}
+function openSettings() {
+  document.getElementById("settingsPanel").classList.toggle("hidden");
+  document.getElementById("editor").classList.add("hidden");
+  document.getElementById("protectionToggle").checked = PASSWORD_PROTECTION;
+}
+function showProtectionInfo() {
+  document.getElementById("protectionToggle").checked = PASSWORD_PROTECTION;
+  alert("To change password protection, edit PASSWORD_PROTECTION near the top of index.html on GitHub, then reload the app.");
+}
+function resetApps() {
+  if (!confirm("Reset the app list to the original sample apps?")) return;
+  apps = defaultApps.map(x=>({...x,id:makeId()}));
+  persist(); renderApps();
+}
+function exportApps() {
+  const blob = new Blob([JSON.stringify(apps,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download="master-app-backup.json"; a.click();
+  URL.revokeObjectURL(url);
+}
+init();
+</script>
+</body>
+</html>
