@@ -41,7 +41,7 @@
   .app-info { min-width:0; flex:1; }
   .app-name { font-weight:750; font-size:19px; overflow-wrap:anywhere; }
   .app-desc { color:var(--muted); font-size:14px; overflow-wrap:anywhere; }
-  .actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+  .actions { display:flex; flex-direction:row; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-start; width:100%; }
   .btn {
     border:0; border-radius:10px; padding:9px 12px; cursor:pointer;
     background:#edf1f5; color:var(--text); min-height:42px;
@@ -81,9 +81,10 @@
   .settings-line:last-child { border-bottom:0; }
   .switch { transform:scale(1.25); }
   @media (max-width:600px) {
-    .app-card { align-items:flex-start; }
-    .actions { flex-direction:column; }
-    .actions .btn { width:100%; }
+    .app-card { align-items:center; }
+    .app-info { flex:1 1 calc(100% - 70px); }
+    .actions { flex-direction:row; width:100%; justify-content:flex-start; }
+    .actions .btn { width:auto; flex:0 0 auto; }
     .row { grid-template-columns:1fr; }
   }
 </style>
@@ -102,8 +103,8 @@
   If you forget the password, open this file on GitHub and look here.
 -->
 <script>
-const PASSWORD_PROTECTION = true;
-const PASSWORD = "1956";
+const DEFAULT_PASSWORD_PROTECTION = true;
+const PASSWORD = "songyan1956";
 const APP_TITLE = "My Master App";
 </script>
 
@@ -112,6 +113,7 @@ const APP_TITLE = "My Master App";
     <div class="lock">🔐</div>
     <h1>My Master App</h1>
     <p>Enter your password to continue.</p>
+    <p style="margin:0 0 12px;color:#68737d;font-size:15px">Password hint: <strong>me</strong></p>
     <input id="loginPassword" type="password" inputmode="numeric" autocomplete="current-password"
            placeholder="Password" aria-label="Password">
     <div id="loginError" class="error"></div>
@@ -211,7 +213,11 @@ const defaultApps = [
 ];
 
 let apps = loadApps();
-let authenticated = !PASSWORD_PROTECTION;
+let protectionEnabled = (() => {
+  const saved = localStorage.getItem("masterAppPasswordProtection");
+  return saved === null ? DEFAULT_PASSWORD_PROTECTION : saved === "true";
+})();
+let authenticated = !protectionEnabled;
 
 function loadApps() {
   try {
@@ -228,7 +234,7 @@ function persist() {
 }
 function init() {
   document.title = APP_TITLE;
-  if (PASSWORD_PROTECTION) {
+  if (protectionEnabled) {
     document.getElementById("loginScreen").classList.remove("hidden");
   } else {
     showApp();
@@ -339,7 +345,7 @@ function renderApps() {
   Object.keys(sections).forEach(key => {
     const list = apps.filter(a => a.section===key && (!q || (a.name+" "+(a.desc||"")).toLowerCase().includes(q)));
     const sec = document.createElement("section");
-    sec.innerHTML = '<h2 class="section-title">'+sections[key].title+'</h2>';
+    sec.innerHTML = '';
     const box = document.createElement("div");
     box.className = "app-list";
     if (!list.length) {
@@ -372,11 +378,20 @@ function renderApps() {
 function openSettings() {
   document.getElementById("settingsPanel").classList.toggle("hidden");
   document.getElementById("editor").classList.add("hidden");
-  document.getElementById("protectionToggle").checked = PASSWORD_PROTECTION;
+  document.getElementById("protectionToggle").checked = protectionEnabled;
 }
 function showProtectionInfo() {
-  document.getElementById("protectionToggle").checked = PASSWORD_PROTECTION;
-  alert("To change password protection, edit PASSWORD_PROTECTION near the top of index.html on GitHub, then reload the app.");
+  protectionEnabled = document.getElementById("protectionToggle").checked;
+  localStorage.setItem("masterAppPasswordProtection", String(protectionEnabled));
+  if (protectionEnabled) {
+    alert("Password protection is now ON. The app will lock now.");
+    lockApp();
+  } else {
+    authenticated = true;
+    document.getElementById("loginScreen").classList.add("hidden");
+    showApp();
+    alert("Password protection is now OFF on this device/browser.");
+  }
 }
 function resetApps() {
   if (!confirm("Reset the app list to the original sample apps?")) return;
